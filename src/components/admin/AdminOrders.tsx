@@ -1507,17 +1507,11 @@ const AdminOrders = () => {
             >
 
               <option value="all">All Products</option>
-
-              {products.map((product) => (
-
-                <option key={product.id} value={product.id}>
-
+              {Array.from(new Map((products || []).map((p) => [String(p.id), p])).values()).map((product, idx) => (
+                <option key={`order-prod-opt-${product.id}-${idx}`} value={product.id}>
                   {product.name}
-
                 </option>
-
               ))}
-
             </select>
 
           </div>
@@ -1692,7 +1686,7 @@ const AdminOrders = () => {
 
           <tbody>
 
-            {filteredOrders.map((order) => {
+            {filteredOrders.map((order, orderIdx) => {
 
               const firstItem = order.items?.[0];
 
@@ -1706,7 +1700,7 @@ const AdminOrders = () => {
 
               return (
 
-                <tr key={orderId} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-muted/20' : ''}`}>
+                <tr key={`order-row-${orderId || 'item'}-${orderIdx}`} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${isSelected ? 'bg-muted/20' : ''}`}>
 
                   <td className="p-4">
 

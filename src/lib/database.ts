@@ -30,8 +30,8 @@ export async function getMongoClient(uri: string) {
       // Keep pool small per Vercel serverless instance to avoid Atlas connection spikes
       maxPoolSize: 1,
       minPoolSize: 0,
-      serverSelectionTimeoutMS: 20_000,
-      connectTimeoutMS: 20_000,
+      serverSelectionTimeoutMS: 3_000,
+      connectTimeoutMS: 3_000,
     });
 
     await client.connect();

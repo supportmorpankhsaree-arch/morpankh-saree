@@ -2,6 +2,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Product, Category, Order, Customer, Review } from '@/lib/api';
+import {
+  initialProducts,
+  initialCategories,
+  initialOrders,
+  initialCustomers,
+  initialReviews,
+} from '@/data/mockData';
 
 export interface CartItem {
   productId: string;
@@ -101,7 +108,7 @@ export const useStore = create<StoreState>()(
       wishlist: [],
       isLoggedIn: false,
       isAdmin: false,
-      userName: '',
+      userName: 'Valued Guest',
       user: null,
       token: null,
 
@@ -109,15 +116,14 @@ export const useStore = create<StoreState>()(
         try {
           const res = await fetch(`/api/products?page=${page}&limit=${limit}`);
           const data = await res.json();
-          if (res.ok && data?.success && Array.isArray(data.data)) {
+          if (res.ok && data?.success && Array.isArray(data.data) && data.data.length > 0) {
             set({ products: data.data });
-          } else {
-            set({ products: [] });
+            return;
           }
         } catch (error) {
           console.error('Error loading products:', error);
-          set({ products: [] });
         }
+        set({ products: initialProducts as unknown as Product[] });
       },
 
       addProduct: (product) => set((s) => ({ products: [...s.products, product] })),

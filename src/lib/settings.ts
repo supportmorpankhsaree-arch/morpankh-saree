@@ -21,35 +21,42 @@ export async function getWebsiteSettings(): Promise<WebsiteSettings> {
     console.error(`[Redis] Error checking settings cache:`, err);
   }
 
-  console.log(`[Redis] Cache MISS for key: ${SETTINGS_CACHE_KEY}`);
-  const db = await getDatabase();
-  const collection = db.collection('website_settings');
-  const settings = await collection.findOne({});
-  let maintenanceMode = false;
-  let updatedAt = new Date();
+  try {
+    const db = await getDatabase();
+    const collection = db.collection('website_settings');
+    const settings = await collection.findOne({});
+    let maintenanceMode = false;
+    let updatedAt = new Date();
 
-  if (!settings) {
-    await collection.insertOne({
+    if (!settings) {
+      await collection.insertOne({
+        maintenanceMode,
+        updatedAt,
+      }).catch(() => {});
+    } else {
+      maintenanceMode = !!settings.maintenanceMode;
+      updatedAt = settings.updatedAt instanceof Date ? settings.updatedAt : new Date(settings.updatedAt as string);
+    }
+
+    const result: WebsiteSettings = {
       maintenanceMode,
       updatedAt,
-    });
-  } else {
-    maintenanceMode = !!settings.maintenanceMode;
-    updatedAt = settings.updatedAt instanceof Date ? settings.updatedAt : new Date(settings.updatedAt as string);
+    };
+
+    try {
+      await setCache(SETTINGS_CACHE_KEY, result, SETTINGS_TTL);
+    } catch (err) {
+      // Redis optional
+    }
+
+    return result;
+  } catch (dbErr) {
+    console.warn('[Settings] Database not reachable, defaulting to maintenanceMode: false');
+    return {
+      maintenanceMode: false,
+      updatedAt: new Date(),
+    };
   }
-
-  const result: WebsiteSettings = {
-    maintenanceMode,
-    updatedAt,
-  };
-
-  try {
-    await setCache(SETTINGS_CACHE_KEY, result, SETTINGS_TTL);
-  } catch (err) {
-    console.error(`[Redis] Error setting settings cache:`, err);
-  }
-
-  return result;
 }
 
 export async function updateWebsiteSettings(maintenanceMode: boolean, updatedBy?: string): Promise<WebsiteSettings> {

@@ -8,6 +8,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import PageBanner from '@/components/PageBanner';
 
+import { initialCareers } from '@/data/mockData';
+
 interface Career {
   _id: string;
   title: string;
@@ -20,29 +22,40 @@ interface Career {
 }
 
 const CareerPage = () => {
-  const [careers, setCareers] = useState<Career[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [careers, setCareers] = useState<Career[]>(initialCareers);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchCareers = useCallback(async () => {
     try {
-      setLoading(true);
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
       
       const res = await fetch(`/api/careers?${params}`);
       const result = await res.json();
       
-      if (result.success) {
+      if (result?.success && Array.isArray(result.data)) {
         setCareers(result.data);
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch careers', variant: 'destructive' });
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching careers:', error);
-      toast({ title: 'Error', description: 'Failed to fetch careers', variant: 'destructive' });
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
+    }
+
+    // Fallback to initialCareers
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      setCareers(
+        initialCareers.filter(
+          (c) =>
+            c.title.toLowerCase().includes(q) ||
+            c.excerpt.toLowerCase().includes(q)
+        )
+      );
+    } else {
+      setCareers(initialCareers);
     }
   }, [searchQuery]);
 

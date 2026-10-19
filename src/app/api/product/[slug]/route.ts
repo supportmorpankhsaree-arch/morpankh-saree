@@ -19,32 +19,54 @@ import { ObjectId } from 'mongodb';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
 import { cacheOrFetch, invalidateProductCache } from '@/lib/redis';
 import { checkAndExpireLimitedOffer } from '@/lib/mapProduct';
+import { initialProducts } from '@/data/mockData';
 
 export const runtime = 'nodejs';
 
-
-
-const uri = process.env.MONGODB_URI!;
-
-
+const uri = process.env.MONGODB_URI;
 
 function getSlug(name: string): string {
-
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-
 }
 
-
-
 export async function GET(
-
   _req: NextRequest,
-
   context: { params: Promise<{ slug: string }> }
-
 ) {
-
   const { slug } = await context.params;
+
+  if (!uri) {
+    const p = initialProducts.find((item) => item.slug === slug || item.id === slug);
+    if (!p) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    return NextResponse.json({
+      _id: p.id,
+      name: p.name,
+      slug: p.slug,
+      basePrice: p.price,
+      compareAtPrice: p.comparePrice,
+      description: p.description,
+      fabricType: p.fabric,
+      category: p.category,
+      colors: p.colors,
+      hasSizes: p.hasSizes,
+      sizes: p.sizes,
+      stock: p.stock,
+      sku: p.sku,
+      tags: p.tags,
+      isFeatured: p.featured,
+      isNew: p.isNew,
+      isSale: p.isSale,
+      isPremium: p.isPremium,
+      isTrending: p.isTrending,
+      isLiveSpecial: p.isLiveSpecial,
+      isLimitedOffer: p.isLimitedOffer,
+      rating: p.rating,
+      reviewCount: p.reviews,
+      isActive: true,
+    });
+  }
 
   // Use Redis cache with 10-minute TTL (600 seconds)
   // Cache key: product:{slug}

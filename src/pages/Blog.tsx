@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Loader2, Calendar } from 'lucide-react';
+import { Search, Loader2, Calendar, ArrowRight, Sparkles, Clock } from 'lucide-react';
 import PublicLayout from '@/components/PublicLayout';
 import { toast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
 import PageBanner from '@/components/PageBanner';
+
+import { initialBlogs } from '@/data/mockData';
 
 interface Blog {
   _id: string;
@@ -21,29 +23,40 @@ interface Blog {
 }
 
 const BlogPage = () => {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [blogs, setBlogs] = useState<Blog[]>(initialBlogs);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchBlogs = useCallback(async () => {
     try {
-      setLoading(true);
       const params = new URLSearchParams();
       if (searchQuery) params.set('search', searchQuery);
       
       const res = await fetch(`/api/blogs?${params}`);
       const result = await res.json();
       
-      if (result.success) {
+      if (result?.success && Array.isArray(result.data)) {
         setBlogs(result.data);
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch blogs', variant: 'destructive' });
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      toast({ title: 'Error', description: 'Failed to fetch blogs', variant: 'destructive' });
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
+    }
+
+    // Fallback to initialBlogs
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      setBlogs(
+        initialBlogs.filter(
+          (b) =>
+            b.title.toLowerCase().includes(q) ||
+            b.excerpt.toLowerCase().includes(q)
+        )
+      );
+    } else {
+      setBlogs(initialBlogs);
     }
   }, [searchQuery]);
 
@@ -84,39 +97,76 @@ const BlogPage = () => {
             <p className="text-muted-foreground">No blogs found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogs.map((blog) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {blogs.map((blog, idx) => (
               <Link
                 key={blog._id}
                 href={`/blog/${blog.slug}`}
-                className="group bg-card rounded-xl overflow-hidden border border-border hover:shadow-lg transition-all duration-300"
+                className="group relative flex flex-col bg-card rounded-2xl overflow-hidden border border-border/70 hover:border-primary/50 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
               >
-                <div className="relative aspect-[16/9] overflow-hidden bg-muted">
+                {/* Image Container with Luxury Aspect Ratio & Overlay Badges */}
+                <div className="relative aspect-[16/11] w-full overflow-hidden bg-muted/30">
                   <Image
                     src={blog.image}
                     alt={blog.title}
                     fill
-                    className="object-contain group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover object-top group-hover:scale-108 transition-transform duration-700 ease-out"
                   />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(blog.blogDate || blog.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
+                  {/* Subtle bottom gradient to blend image nicely */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 opacity-60 group-hover:opacity-40 transition-opacity" />
+
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/95 dark:bg-black/90 text-primary shadow-sm backdrop-blur-md border border-white/30">
+                      <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      {idx % 3 === 0 ? 'Heritage Guide' : idx % 3 === 1 ? 'Styling Tips' : 'Saree Care'}
+                    </span>
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                    {blog.title}
-                  </h3>
-                  <p className="text-dark-grey text-sm line-clamp-3 mb-4">
-                    {blog.excerpt}
-                  </p>
-                  <span className="inline-flex items-center text-primary font-medium text-sm group-hover:underline">
-                    Read More
-                  </span>
+
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-black/60 text-white shadow-sm backdrop-blur-md">
+                      <Clock className="w-3 h-3" />
+                      4 min read
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-3">
+                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Calendar className="h-3.5 w-3.5" />
+                      </div>
+                      <span>
+                        {new Date(blog.blogDate || blog.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold font-serif mb-3 text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                      {blog.title}
+                    </h3>
+
+                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed mb-6">
+                      {blog.excerpt}
+                    </p>
+                  </div>
+
+                  {/* Card Action */}
+                  <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-primary inline-flex items-center gap-1.5 group-hover:gap-2.5 transition-all">
+                      Read Story
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium group-hover:text-foreground transition-colors">
+                      Morpankh Stories
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

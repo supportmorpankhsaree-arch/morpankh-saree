@@ -15,13 +15,22 @@ interface ReviewDoc {
   createdAt: Date;
 }
 
+import { initialReviews } from '@/data/mockData';
+
 export async function GET(request: NextRequest) {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    return NextResponse.json(
-      { error: 'MONGODB_URI is not configured on the server' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      reviews: initialReviews.map((r) => ({
+        _id: r.id,
+        name: r.name,
+        rating: r.rating,
+        comment: r.comment,
+        avatar: r.avatar,
+        approved: r.approved,
+        createdAt: r.date,
+      })),
+    });
   }
 
   const { searchParams } = new URL(request.url);

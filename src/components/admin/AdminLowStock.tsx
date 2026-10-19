@@ -213,8 +213,8 @@ const AdminLowStock = () => {
                 className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.slug}>{c.name}</option>
+                {Array.from(new Map((categories || []).map((c) => [c.id || c.slug, c])).values()).map((c, idx) => (
+                  <option key={`cat-opt-${c.id || c.slug}-${idx}`} value={c.slug}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -301,14 +301,14 @@ const AdminLowStock = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {products.map((p) => {
+                  {products.map((p, idx) => {
                     const hasImage = p.images && p.images.length > 0;
                     const variantText = typeof p.colors?.[0] === 'string'
                       ? p.colors[0]
                       : p.colors?.[0]?.colorName || '';
 
                     return (
-                      <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={`low-stock-prod-${p.id || idx}-${idx}`} className="hover:bg-muted/30 transition-colors">
                         {/* Image */}
                         <td className="p-4">
                           <div className="h-10 w-10 rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center shrink-0">

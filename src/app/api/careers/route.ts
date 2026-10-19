@@ -15,11 +15,21 @@ async function getDatabase() {
   return db;
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search')?.trim() || '';
+import { initialCareers } from '@/data/mockData';
 
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const search = searchParams.get('search')?.trim().toLowerCase() || '';
+
+  if (!process.env.MONGODB_URI) {
+    let list = initialCareers;
+    if (search) {
+      list = list.filter((c) => c.title.toLowerCase().includes(search) || c.excerpt.toLowerCase().includes(search));
+    }
+    return NextResponse.json({ success: true, data: list });
+  }
+
+  try {
     const database = await getDatabase();
     const collection = database.collection('careers');
 
@@ -44,7 +54,11 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('Error fetching careers:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch careers' }, { status: 500 });
+    console.error('Error fetching careers, falling back to mock data:', error);
+    let list = initialCareers;
+    if (search) {
+      list = list.filter((c) => c.title.toLowerCase().includes(search) || c.excerpt.toLowerCase().includes(search));
+    }
+    return NextResponse.json({ success: true, data: list });
   }
 }

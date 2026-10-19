@@ -6,6 +6,8 @@ import { useStore } from '@/store/useStore';
 import { Eye, Search, Calendar, X, RotateCcw, Download } from 'lucide-react';
 import PublicLayout from '@/components/PublicLayout';
 
+import { initialOrders } from '@/data/mockData';
+
 type OrderItem = { productId: string; name: string; color: string; size?: string; quantity: number; price: number; image?: string };
 type Order = {
   id?: string;
@@ -46,7 +48,6 @@ const OrdersPage = () => {
     const tokenToUse = authToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
     if (!tokenToUse) {
       setMyOrders([]);
-      setFilteredOrders([]);
       return;
     }
 
@@ -60,16 +61,14 @@ const OrdersPage = () => {
       const data = await res.json();
       if (res.ok && data?.success && Array.isArray(data.data)) {
         setMyOrders(data.data as Order[]);
-      } else {
-        console.log('Orders API response:', data);
-        setMyOrders([]);
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      setMyOrders([]);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
+    setMyOrders([]);
   };
 
   useEffect(() => {

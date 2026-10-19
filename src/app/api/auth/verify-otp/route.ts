@@ -24,13 +24,23 @@ async function sendWelcomeEmail(email: string, name: string) {
   try {
     console.log('📧 Attempting to send welcome email to:', email);
 
+    const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
+    const port = parseInt(process.env.EMAIL_PORT || '465');
+    const secure = process.env.EMAIL_USE_SSL === 'true' || port === 465;
+    const user = process.env.EMAIL_HOST_USER?.trim();
+    const pass = process.env.EMAIL_HOST_PASSWORD?.replace(/\s+/g, '');
+
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '465'),
-      secure: process.env.EMAIL_USE_SSL === 'true',
+      host,
+      port,
+      secure,
       auth: {
-        user: process.env.EMAIL_HOST_USER,
-        pass: process.env.EMAIL_HOST_PASSWORD,
+        user,
+        pass,
+      },
+      tls: {
+        servername: host,
+        rejectUnauthorized: false,
       },
       logger: true,
       debug: true,
