@@ -193,12 +193,12 @@ const Products = ({ initialCategory = '', initialHighlight = '', initialSearch =
         if (minPriceFilter > 0) params.set('minPrice', String(minPriceFilter));
         if (maxPriceFilter > 0) params.set('maxPrice', String(maxPriceFilter));
 
-        const response = await fetch(`/api/products?${params.toString()}`);
+        const response = await fetch(`/api/products?${params.toString()}`, { cache: 'no-store' });
         const result = await response.json();
-        if (response.ok && result?.success && Array.isArray(result.data) && result.data.length > 0) {
+        if (response.ok && result?.success && Array.isArray(result.data)) {
           setProducts(result.data as Product[]);
-          setTotalProducts(Number(result.pagination?.total) || result.data.length);
-          setTotalPages(Number(result.pagination?.totalPages) || 1);
+          setTotalProducts(Number(result.pagination?.total ?? result.data.length));
+          setTotalPages(Number(result.pagination?.totalPages ?? 1));
           return;
         }
       } catch {
@@ -1126,4 +1126,3 @@ const Products = ({ initialCategory = '', initialHighlight = '', initialSearch =
 
 
 export default Products;
-

@@ -102,7 +102,7 @@ const Contact = () => {
     {
       icon: Mail,
       label: 'Email Us',
-      value: 'nextlevelluxuries3@gmail.com',
+      value: 'morpankhsarees1@gmail.com',
       sub: 'Reply within 24 hours',
     },
     {
