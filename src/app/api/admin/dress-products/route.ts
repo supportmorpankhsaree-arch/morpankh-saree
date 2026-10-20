@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Db, WithId, Document } from 'mongodb';
-import { getDatabaseName, getMongoClient } from '@/lib/database';
+import { WithId, Document } from 'mongodb';
+import { getDatabase } from '@/lib/database';
 
 export const runtime = 'nodejs';
-
-let db: Db;
 
 function isAdminRequest(request: NextRequest) {
   const auth = (request.headers.get('authorization') || '').trim();
   const match = auth.match(/^Bearer\s+(.+)$/i);
   const token = match?.[1]?.trim();
   return token === 'admin-token';
-}
-
-async function getDatabase() {
-  if (!db) {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/morepankh_6th_may';
-    const client = await getMongoClient(uri);
-    db = client.db(getDatabaseName());
-  }
-  return db;
 }
 
 function getSlug(name: string): string {
@@ -106,11 +95,7 @@ export async function GET(request: NextRequest) {
       category: category ? { _id: category._id?.toString(), name: category.name, slug: category.slug } : null
     });
 
-    if (!category) {
-      return NextResponse.json({ success: false, error: `${categoryParam} category not found in database. Please create a ${categoryParam} category first.` }, { status: 400 });
-    }
-
-    const categorySlug = category.slug as string;
+    const categorySlug = (category?.slug as string) || categoryParam.toLowerCase().replace(/\s+/g, '-');
 
     console.log('[SIZE-PRODUCTS-GET] Using category slug for filtering:', categorySlug);
 
@@ -207,10 +192,11 @@ export async function GET(request: NextRequest) {
         totalPages,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching dress products:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch dress products';
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch dress products' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

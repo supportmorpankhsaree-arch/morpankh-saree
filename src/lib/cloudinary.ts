@@ -1,26 +1,32 @@
-/**
- * @deprecated The Cloudinary account (dlo0tycsx) is disabled.
- * New uploads use Cloudflare R2 via /api/upload and /api/upload-url.
- * This module is kept only for legacy deleteImage / getPublicIdFromUrl helpers.
- */
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Configure Cloudinary
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config(true);
+}
+if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME.trim(),
+    api_key: process.env.CLOUDINARY_API_KEY.trim(),
+    api_secret: process.env.CLOUDINARY_API_SECRET.trim(),
+  });
+}
+cloudinary.config({ secure: true });
 
 export async function uploadImage(file: File | Buffer, folder = 'categories'): Promise<string> {
   return new Promise((resolve, reject) => {
+    const uploadOptions: UploadApiOptions = {
+      folder,
+      resource_type: 'image',
+      format: 'webp',
+      quality: 'auto',
+      fetch_format: 'auto',
+    };
+    if (process.env.CLOUDINARY_UPLOAD_PRESET) {
+      uploadOptions.upload_preset = process.env.CLOUDINARY_UPLOAD_PRESET.trim();
+    }
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: 'image',
-        format: 'webp',
-        quality: 'auto',
-        fetch_format: 'auto',
-      },
+      uploadOptions,
       (error, result) => {
         if (error) {
           reject(error);

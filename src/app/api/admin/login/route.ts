@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 export const runtime = 'nodejs';
 
@@ -31,7 +32,16 @@ export async function POST(request: NextRequest) {
     const inputEmail = normalize(String(email)).toLowerCase();
     const inputPassword = normalize(String(password));
 
-    if (inputEmail !== envAdminEmail || inputPassword !== envAdminPassword) {
+    let passwordMatch = inputPassword === envAdminPassword;
+    if (!passwordMatch && (envAdminPassword.startsWith('$2a$') || envAdminPassword.startsWith('$2b$'))) {
+      try {
+        passwordMatch = await bcrypt.compare(inputPassword, envAdminPassword);
+      } catch {
+        passwordMatch = false;
+      }
+    }
+
+    if (inputEmail !== envAdminEmail || !passwordMatch) {
       return NextResponse.json(
         { error: 'Invalid admin credentials' },
         { status: 401 }

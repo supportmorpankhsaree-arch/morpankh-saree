@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Db, ObjectId } from 'mongodb';
-import { getDatabaseName, getMongoClient } from '@/lib/database';
+import { ObjectId } from 'mongodb';
+import { getDatabase } from '@/lib/database';
 
 export const runtime = 'nodejs';
-
-let db: Db;
 
 function isAdminRequest(request: NextRequest) {
   const auth = (request.headers.get('authorization') || '').trim();
   const match = auth.match(/^Bearer\s+(.+)$/i);
   const token = match?.[1]?.trim();
   return token === 'admin-token';
-}
-
-async function getDatabase() {
-  if (!db) {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/morepankh_6th_may';
-    const client = await getMongoClient(uri);
-    db = client.db(getDatabaseName());
-  }
-  return db;
 }
 
 type DressColorVariant = {
