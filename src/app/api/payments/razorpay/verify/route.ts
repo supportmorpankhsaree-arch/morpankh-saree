@@ -25,7 +25,7 @@ interface User {
 function getEnv(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`${name} is not set`);
-  return v;
+  return v.trim();
 }
 
 export async function POST(req: NextRequest) {

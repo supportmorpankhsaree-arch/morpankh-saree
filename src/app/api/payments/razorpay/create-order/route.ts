@@ -26,7 +26,7 @@ function getNestedString(obj: unknown, path: string[]): string | undefined {
 function getEnv(name: string): string {
   const v = process.env[name];
   if (!v) throw new Error(`${name} is not set`);
-  return v;
+  return v.trim();
 }
 
 function toPaise(amountRupees: number): number {

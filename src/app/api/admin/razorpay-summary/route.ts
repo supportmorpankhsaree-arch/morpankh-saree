@@ -72,8 +72,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const key = process.env.RAZORPAY_KEY;
-  const secret = process.env.RAZORPAY_SECRET;
+  const key = process.env.RAZORPAY_KEY?.trim();
+  const secret = process.env.RAZORPAY_SECRET?.trim();
   const timeZone = process.env.RAZORPAY_TIMEZONE || 'Asia/Kolkata';
 
   if (!key || !secret) {

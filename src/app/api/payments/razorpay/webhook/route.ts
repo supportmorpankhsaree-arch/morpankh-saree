@@ -44,7 +44,7 @@ interface Transaction {
 function getEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is not set`);
-  return value;
+  return value.trim();
 }
 
 function verifyRazorpaySignature(rawBody: string, signature: string, secret: string): boolean {
