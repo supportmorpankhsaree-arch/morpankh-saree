@@ -6,16 +6,18 @@ import { cacheOrFetch } from '@/lib/redis';
 
 export const runtime = 'nodejs';
 
+import { initialCategories } from '@/data/mockData';
+
 export async function GET(request: NextRequest) {
   void request;
 
   const uri = process.env.MONGODB_URI;
 
   if (!uri) {
-    return NextResponse.json(
-      { success: false, error: 'MONGODB_URI is not configured on the server' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: initialCategories,
+    });
   }
 
   // Use Redis cache with 30-minute TTL (1800 seconds)

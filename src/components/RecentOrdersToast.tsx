@@ -10,18 +10,7 @@ interface RecentOrder {
   productImage?: string;
 }
 
-const customerNames = [
-  'Priya Sharma',
-  'Anjali Patel',
-  'Sneha Reddy',
-  'Pooja Singh',
-  'Neha Gupta',
-  'Riya Mehta',
-  'Kavita Joshi',
-  'Divya Nair',
-  'Sonal Agarwal',
-  'Meera Kapoor',
-];
+const customerNames: string[] = [];
 
 const RecentOrdersToast = () => {
   const [currentOrder, setCurrentOrder] = useState<RecentOrder | null>(null);
@@ -49,6 +38,7 @@ const RecentOrdersToast = () => {
   }, []);
 
   const buildOrders = (products: typeof useStore extends (sel: (s: infer S) => unknown) => unknown ? S extends { products: infer P } ? P : never : never): RecentOrder[] => {
+    if (!customerNames.length || !products.length) return [];
     const shuffled = [...products].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 10).map((product, index) => ({
       customerName: customerNames[index % customerNames.length],

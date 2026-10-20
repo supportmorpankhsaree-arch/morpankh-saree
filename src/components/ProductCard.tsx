@@ -177,73 +177,80 @@ const ProductCard = ({ product }: ProductCardProps) => {
     <div
       role="link"
       tabIndex={0}
-      className="group block cursor-pointer"
+      className="group block cursor-pointer h-full"
       onClick={handleCardClick}
       onKeyDown={handleCardKeyDown}
     >
-      <div ref={containerRef} className="bg-card rounded-xl overflow-hidden card-hover border border-border flex flex-col h-[285px]">
-        <div className={`relative overflow-hidden transition-all duration-300 ease-in-out ${product.isLimitedOffer && !product.limitedOfferExpired && !product.isPrebooking && product.limitedOfferEndDate ? 'h-[155px]' : 'h-[210px]'}`}>
+      <div ref={containerRef} className="bg-card rounded-xl overflow-hidden card-hover border border-border flex flex-col h-full shadow-sm hover:shadow-md transition-all duration-300">
+        {/* 1:1 Square Image Container matching Flipkart card size */}
+        <div className="relative w-full aspect-square overflow-hidden bg-slate-50 dark:bg-muted/40 transition-all duration-300 ease-in-out">
           {!imgLoaded && (
             <div className="absolute inset-0 bg-muted animate-pulse" />
           )}
           {isNearViewport && (
-              <Image
-                src={imageSrc}
-                alt={product.name}
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-                quality={60}
-                onLoadingComplete={() => setImgLoaded(true)}
-                onError={() => {
-                  setImageSrc('/placeholder.svg');
-                  setImgLoaded(true);
-                }}
-                className={`object-cover object-center transition-transform duration-500 group-hover:scale-110 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-              />
+            <Image
+              src={imageSrc}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+              quality={85}
+              onLoadingComplete={() => setImgLoaded(true)}
+              onError={() => {
+                setImageSrc('/placeholder.svg');
+                setImgLoaded(true);
+              }}
+              className={`object-cover object-top transition-transform duration-700 ease-out group-hover:scale-110 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            />
           )}
-          <div className="absolute top-3 left-3 right-3 z-20 flex items-start justify-between gap-2">
-            {/* Prebooking badge */}
+
+          {/* Top-Right Heart Icon (Flipkart style direct overlay) */}
+          <button
+            onClick={handleToggleWishlist}
+            className="absolute top-2.5 right-2.5 z-20 p-1.5 rounded-full hover:scale-125 active:scale-90 transition-all duration-200 focus:outline-none"
+            title={isWished ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <Heart
+              className={`h-5 w-5 transition-all duration-300 ${
+                isWished
+                  ? 'fill-rose-500 text-rose-500 drop-shadow-md scale-110'
+                  : 'fill-black/25 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] hover:fill-rose-500 hover:text-white'
+              }`}
+            />
+          </button>
+
+          {/* Top-Left Badges */}
+          <div className="absolute top-2.5 left-2.5 z-20 flex flex-col items-start gap-1">
             {product.isPrebooking && (
               <PrebookingBadge 
                 deliveryDays={product.prebookingDeliveryDays || 12} 
-                className="max-w-[48%]"
+                className="max-w-[120px]"
               />
             )}
-            
-            {/* Sale/Discount badge */}
-            {!product.isPrebooking && discount > 0 ? (
-              <span className="bg-destructive text-destructive-foreground text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-sm max-w-[48%] truncate">
-                {product.isSale ? `${discount}% OFF` : `-${discount}%`}
+            {!product.isPrebooking && discount > 0 && (
+              <span className="bg-emerald-600 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm transition-transform duration-300 group-hover:scale-105">
+                {discount}% OFF
               </span>
-            ) : (
-              !product.isPrebooking && <span />
             )}
-
-            {/* LIMITED OFFER badge */}
             {product.isLimitedOffer && (
-              <span className="bg-red-600 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                LIMITED
+              <span className="animate-flame-pulse bg-red-600 text-white text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                🔥 LIMITED
+              </span>
+            )}
+            {product.isNew && (
+              <span className="bg-primary text-primary-foreground text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                NEW
               </span>
             )}
           </div>
-          {product.isNew && (
-            <span className="absolute bottom-2 right-2 sm:bottom-2 sm:right-2 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-sm z-10">
-              NEW
-            </span>
-          )}
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="flex items-center gap-3">
-              <button onClick={handleAddToCart} className="bg-card text-foreground p-3 rounded-full hover:bg-primary hover:text-primary-foreground transition-colors" title="Add to Cart">
-                <ShoppingCart className="h-5 w-5" />
-              </button>
 
-              <button onClick={handleToggleWishlist} className={`p-3 rounded-full transition-colors ${isWished ? 'bg-destructive text-destructive-foreground' : 'bg-card text-foreground hover:bg-destructive hover:text-destructive-foreground'}`} title="Wishlist">
-                <Heart className="h-5 w-5" fill={isWished ? 'currentColor' : 'none'} />
-              </button>
-            </div>
+          {/* Bottom-Right Authentic Seal (Flipkart Authorised Seller Style) */}
+          <div className="absolute bottom-2 right-2 z-10 pointer-events-none opacity-85 group-hover:opacity-100 transition-opacity">
+            <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold text-amber-800 bg-amber-50/95 dark:bg-amber-950/80 dark:text-amber-300 px-1.5 py-0.5 rounded border border-amber-300/50 shadow-xs backdrop-blur-xs">
+              👑 Authentic
+            </span>
           </div>
         </div>
+
         <div onClick={(e) => e.stopPropagation()}>
           <MandatoryNoticeModal
             open={showBuyNowNotice}
@@ -251,69 +258,91 @@ const ProductCard = ({ product }: ProductCardProps) => {
             onConfirm={confirmBuyNow}
           />
         </div>
-        <div className="p-1.5 flex flex-col flex-1 min-h-0 overflow-hidden">
+
+        {/* Compact Details Section below Image */}
+        <div className="p-2.5 sm:p-3 flex flex-col flex-1 justify-between gap-1.5 bg-card">
           <div className="w-full">
-            <h3 className="font-medium text-foreground text-xs truncate">{product.name}</h3>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 mt-1">
-              <div className="flex items-baseline gap-2 min-w-0">
-                <span className="text-primary font-bold text-xs sm:text-sm">
-                  Rs{product.isPrebooking ? (product.prebookingPrice || product.price) : product.price.toLocaleString()}
+            {/* Stock warning if applicable */}
+            {product.isLimitedOffer && stock > 0 && stock <= 5 && (
+              <div className="flex justify-end mb-1">
+                <span className="text-[9px] font-bold text-red-600 bg-red-50 dark:bg-red-950/40 px-1.5 py-0.5 rounded">
+                  Only {stock} left
                 </span>
-                {product.comparePrice > product.price && (
-                  <span className="text-muted-foreground text-[10px] sm:text-xs line-through shrink-0">Rs{product.comparePrice.toLocaleString()}</span>
-                )}
-              </div>
-              <button
-                onClick={handleBuyNow}
-                className="bg-primary hover:bg-primary/95 text-white text-[10px] sm:text-[11px] font-bold px-1.5 py-1 sm:px-2 sm:py-1 rounded-md transition-all shadow-sm shrink-0 w-full sm:w-auto"
-              >
-                Buy Now
-              </button>
-            </div>
-
-            {product.isLimitedOffer && stock > 0 && (
-              <div className="text-[10px] sm:text-[11px] font-semibold text-[#EF4444] select-none mt-1">
-                {stock > 5 ? (
-                  <>🔥 Only <span className="font-bold">5 items available!</span> Order now</>
-                ) : (
-                  <>🔥 Only <span className="font-bold">{stock} item{stock > 1 ? 's' : ''} left!</span></>
-                )}
               </div>
             )}
 
-            {product.isLimitedOffer && !product.limitedOfferExpired && !product.isPrebooking && (
-              <div className="mt-1 space-y-0.5">
-                {product.limitedOfferMessage && (
-                  <div className="text-[10px] text-orange-600 font-medium truncate">{product.limitedOfferMessage}</div>
-                )}
+            {/* Product Title */}
+            <h3 className="font-medium text-foreground text-xs sm:text-sm truncate group-hover:text-primary transition-colors" title={product.name}>
+              {product.name}
+            </h3>
 
-                {product.limitedOfferEndDate && (
-                  <div className="mt-1 w-full">
-                    <LimitedOfferCountdown endDate={product.limitedOfferEndDate} compact={true} horizontal={true} />
-                  </div>
-                )}
+            {/* Price Line (₹Price  ₹ComparePrice  Discount% off) */}
+            <div className="flex items-baseline gap-1.5 mt-1.5 flex-wrap">
+              <span className="font-bold text-sm sm:text-base text-foreground">
+                ₹{product.isPrebooking ? (product.prebookingPrice || product.price).toLocaleString() : product.price.toLocaleString()}
+              </span>
+              {product.comparePrice > product.price && (
+                <>
+                  <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
+                    ₹{product.comparePrice.toLocaleString()}
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-500">
+                    {discount}% off
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Flipkart style Deal Pill / Tag (Lowest Price Live / Top Discount of the Sale) */}
+            <div className="flex items-center justify-between gap-1.5 mt-1.5">
+              {discount >= 50 ? (
+                <span className="inline-block bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">
+                  Top Discount of Sale
+                </span>
+              ) : product.isSale ? (
+                <span className="inline-block bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">
+                  Lowest Price Live
+                </span>
+              ) : product.isPrebooking ? (
+                <span className="inline-block bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">
+                  Prebooking Live
+                </span>
+              ) : (
+                <span className="inline-block bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 text-[9px] sm:text-[10px] font-semibold px-1.5 py-0.5 rounded truncate">
+                  Festive Special
+                </span>
+              )}
+
+              {/* Assured Badge (like f-Assured in Flipkart) */}
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50/90 dark:bg-blue-950/40 px-1 py-0.5 rounded border border-blue-100 dark:border-blue-900/50 shrink-0">
+                ⚡ Assured
+              </span>
+            </div>
+
+            {/* Limited offer countdown if applicable */}
+            {product.isLimitedOffer && !product.limitedOfferExpired && !product.isPrebooking && product.limitedOfferEndDate && (
+              <div className="mt-1 w-full">
+                <LimitedOfferCountdown endDate={product.limitedOfferEndDate} compact={true} horizontal={true} />
               </div>
             )}
           </div>
-          {product.isPrebooking && (
-            <div className="mt-1.5 space-y-0.5 text-[10px] text-purple-700">
-              <div className="flex items-center gap-1 font-medium text-purple-600">
-                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                {product.prebookingMessage || 'Prebook now - Limited availability!'}
-              </div>
-              <div>
-                Expected delivery: {product.prebookingDeliveryDays || 10}-{(product.prebookingDeliveryDays || 10) + 5} days
-              </div>
-            </div>
-          )}
-          {product.cardOfferText && !product.isPrebooking && (
-            <div className="mt-1.5 flex justify-end">
-              <span className="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-100">
-                {product.cardOfferText}
-              </span>
-            </div>
-          )}
+
+          {/* Action Row: Quick Add to Cart & Buy Now */}
+          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-border/40">
+            <button
+              onClick={handleAddToCart}
+              className="p-1.5 sm:p-2 rounded-lg border border-border hover:bg-muted text-foreground transition-all duration-200 hover:scale-105 active:scale-90 hover:border-primary shrink-0"
+              title="Add to Cart"
+            >
+              <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+            <button
+              onClick={handleBuyNow}
+              className="btn-shine flex-1 bg-primary hover:bg-primary/90 active:scale-95 text-primary-foreground text-xs font-bold py-1.5 px-2.5 rounded-lg transition-all shadow-xs hover:shadow-md hover:scale-[1.02] text-center"
+            >
+              Buy Now
+            </button>
+          </div>
         </div>
       </div>
     </div>

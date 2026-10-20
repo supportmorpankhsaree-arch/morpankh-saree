@@ -20,7 +20,6 @@ export function updateClientSettingsCache(maintenanceMode: boolean) {
 export default function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const isAdmin = pathname?.startsWith('/admin');
@@ -28,7 +27,6 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
     const isApi = pathname?.startsWith('/api');
 
     if (isAdmin || isMaintenancePage || isApi) {
-      setLoading(false);
       return;
     }
 
@@ -39,14 +37,17 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
         if (cachedSettings && (now - cachedSettings.timestamp < CACHE_TTL)) {
           if (cachedSettings.maintenanceMode) {
             router.replace('/maintenance');
-          } else {
-            setLoading(false);
           }
           return;
         }
 
-        // Fetch fresh settings
-        const res = await fetch('/api/settings');
+        // Fetch fresh settings with 2.5s timeout so it never blocks or hangs
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        const res = await fetch('/api/settings', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const data = await res.json();
           cachedSettings = {
@@ -58,31 +59,22 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
             router.replace('/maintenance');
             return;
           }
+        } else {
+          cachedSettings = {
+            maintenanceMode: false,
+            timestamp: Date.now()
+          };
         }
       } catch (err) {
-        console.error('Failed to check maintenance mode status:', err);
+        cachedSettings = {
+          maintenanceMode: false,
+          timestamp: Date.now()
+        };
       }
-      setLoading(false);
     }
 
     checkMaintenance();
   }, [pathname, router]);
-
-  const isAdmin = pathname?.startsWith('/admin');
-  const isMaintenancePage = pathname === '/maintenance';
-  const isApi = pathname?.startsWith('/api');
-
-  // Block rendering of public pages while the initial loading/check is happening
-  if (loading && !isAdmin && !isMaintenancePage && !isApi) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground font-medium animate-pulse">Loading Morpankh...</p>
-        </div>
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }

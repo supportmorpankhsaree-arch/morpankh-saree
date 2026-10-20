@@ -3,6 +3,7 @@ import { WithId, Document } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
+import { saveMemoryOtp } from '@/lib/otpStore';
 
 export const runtime = 'nodejs';
 
@@ -16,17 +17,23 @@ interface AdminOtpDoc {
 }
 
 function getEmailTransporter() {
-  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
   const port = Number(process.env.EMAIL_PORT || '465');
   const secure = process.env.EMAIL_USE_SSL === 'true' || port === 465;
+  const user = process.env.EMAIL_HOST_USER?.trim();
+  const pass = process.env.EMAIL_HOST_PASSWORD?.replace(/\s+/g, '');
 
   return nodemailer.createTransport({
     host,
     port,
     secure,
     auth: {
-      user: process.env.EMAIL_HOST_USER,
-      pass: process.env.EMAIL_HOST_PASSWORD,
+      user,
+      pass,
+    },
+    tls: {
+      servername: host,
+      rejectUnauthorized: false,
     },
     connectionTimeout: 10_000,
     greetingTimeout: 10_000,
@@ -123,19 +130,27 @@ export async function POST(request: NextRequest) {
     const otpHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    stage = 'mongo';
-    const client = await getMongoClient(uri);
-    const db = client.db(getDatabaseName());
-    const adminOtps = db.collection<AdminOtpDoc>('admin_otps');
+    // Always save in fast memory fallback store
+    saveMemoryOtp(inputEmail, otpHash, expiresAt);
+    console.log(`[ADMIN OTP] Generated OTP for ${inputEmail}: ${otp}`);
 
-    await adminOtps.updateOne(
-      { email: inputEmail },
-      {
-        $set: { otpHash, expiresAt },
-        $setOnInsert: { createdAt: new Date(), email: inputEmail },
-      },
-      { upsert: true }
-    );
+    // Attempt to persist to MongoDB (if available / whitelisted)
+    try {
+      const client = await getMongoClient(uri);
+      const db = client.db(getDatabaseName());
+      const adminOtps = db.collection<AdminOtpDoc>('admin_otps');
+
+      await adminOtps.updateOne(
+        { email: inputEmail },
+        {
+          $set: { otpHash, expiresAt },
+          $setOnInsert: { createdAt: new Date(), email: inputEmail },
+        },
+        { upsert: true }
+      );
+    } catch (mongoErr) {
+      console.warn('[ADMIN OTP] MongoDB Atlas unreachable, fallback to in-memory OTP store:', (mongoErr as Error).message);
+    }
 
     stage = 'email';
     await Promise.race([

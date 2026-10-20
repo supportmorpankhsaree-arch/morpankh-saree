@@ -12,7 +12,7 @@ import ProductCard from '@/components/ProductCard';
 
 import { useStore } from '@/store/useStore';
 
-import { Category, Product } from '@/data/mockData';
+import { Category, Product, initialProducts, initialCategories } from '@/data/mockData';
 import { toast } from '@/hooks/use-toast';
 
 
@@ -195,51 +195,87 @@ const Products = ({ initialCategory = '', initialHighlight = '', initialSearch =
 
         const response = await fetch(`/api/products?${params.toString()}`);
         const result = await response.json();
-        if (response.ok && result?.success && Array.isArray(result.data)) {
+        if (response.ok && result?.success && Array.isArray(result.data) && result.data.length > 0) {
           setProducts(result.data as Product[]);
           setTotalProducts(Number(result.pagination?.total) || result.data.length);
           setTotalPages(Number(result.pagination?.totalPages) || 1);
-        } else {
-          setProducts([]);
-          setTotalProducts(0);
-          setTotalPages(1);
+          return;
         }
       } catch {
-        setProducts([]);
-        setTotalProducts(0);
-        setTotalPages(1);
+        // ignore
       } finally {
         setProductsLoading(false);
       }
+
+      // Fallback to client-side filtering on initialProducts
+      let filtered = [...initialProducts];
+      if (selectedCategory) {
+        filtered = filtered.filter(
+          (p) => p.category?.toLowerCase() === selectedCategory.toLowerCase()
+        );
+      }
+      if (selectedHighlight) {
+        if (selectedHighlight === 'featured') filtered = filtered.filter((p) => p.featured);
+        else if (selectedHighlight === 'limited') filtered = filtered.filter((p) => p.isLimitedOffer || p.isSale);
+        else if (selectedHighlight === 'sale') filtered = filtered.filter((p) => p.isSale);
+        else if (selectedHighlight === 'new') filtered = filtered.filter((p) => p.isNew);
+        else if (selectedHighlight === 'trending') filtered = filtered.filter((p) => p.isTrending);
+        else if (selectedHighlight === 'premium') filtered = filtered.filter((p) => p.isPremium);
+        else if (selectedHighlight === 'liveSpecial') filtered = filtered.filter((p) => p.isLiveSpecial);
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.fabric.toLowerCase().includes(q)
+        );
+      }
+      if (minPriceFilter > 0) {
+        filtered = filtered.filter((p) => p.price >= minPriceFilter);
+      }
+      if (maxPriceFilter > 0) {
+        filtered = filtered.filter((p) => p.price <= maxPriceFilter);
+      }
+      if (sortBy === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (sortBy === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+      } else if (sortBy === 'rating') {
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      const total = filtered.length;
+      const pages = Math.max(1, Math.ceil(total / pageSize));
+      const start = (page - 1) * pageSize;
+      const paged = filtered.slice(start, start + pageSize);
+
+      setProducts(paged);
+      setTotalProducts(total);
+      setTotalPages(pages);
+      setProductsLoading(false);
     };
     void loadProducts();
   }, [page, selectedCategory, selectedSize, selectedHighlight, sortBy, searchQuery, minPriceFilter, maxPriceFilter, maxPrice]);
 
   useEffect(() => {
     const fetchCategories = async () => {
-
       try {
-
         const response = await fetch('/api/categories');
-
         const result = await response.json();
-
-        if (response.ok && result?.success && Array.isArray(result.data)) {
-
+        if (response.ok && result?.success && Array.isArray(result.data) && result.data.length > 0) {
           setCategories(result.data as Category[]);
-
           return;
-
         }
-
       } catch {
-
         // ignore
-
       }
-
-      setCategories(Array.isArray(storeCategories) ? (storeCategories as unknown as Category[]) : []);
-
+      if (Array.isArray(storeCategories) && storeCategories.length > 0) {
+        setCategories(storeCategories as unknown as Category[]);
+      } else {
+        setCategories(initialCategories);
+      }
     };
 
 

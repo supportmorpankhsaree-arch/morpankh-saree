@@ -18,15 +18,9 @@ function parsePositiveInt(value: string | null, fallback: number, max: number): 
   return Math.min(Math.floor(n), max);
 }
 
-export async function GET(request: NextRequest) {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    return NextResponse.json(
-      { success: false, error: 'MONGODB_URI is not configured on the server' },
-      { status: 500 }
-    );
-  }
+import { initialProducts } from '@/data/mockData';
 
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = parsePositiveInt(searchParams.get('page'), 1, 500);
   const limit = parsePositiveInt(searchParams.get('limit'), 12, 48);
@@ -38,6 +32,61 @@ export async function GET(request: NextRequest) {
   const inStock = searchParams.get('inStock') !== 'false';
   const minPrice = searchParams.get('minPrice') !== null ? Number(searchParams.get('minPrice')) : undefined;
   const maxPrice = searchParams.get('maxPrice') !== null ? Number(searchParams.get('maxPrice')) : undefined;
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    let list = [...initialProducts];
+    if (category) {
+      list = list.filter((p) => p.category?.toLowerCase() === category.toLowerCase());
+    }
+    if (highlight) {
+      if (highlight === 'featured') list = list.filter((p) => p.featured);
+      else if (highlight === 'limited') list = list.filter((p) => p.isLimitedOffer || p.isSale);
+      else if (highlight === 'sale') list = list.filter((p) => p.isSale);
+      else if (highlight === 'new') list = list.filter((p) => p.isNew);
+      else if (highlight === 'trending') list = list.filter((p) => p.isTrending);
+      else if (highlight === 'premium') list = list.filter((p) => p.isPremium);
+      else if (highlight === 'liveSpecial') list = list.filter((p) => p.isLiveSpecial);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.fabric.toLowerCase().includes(q)
+      );
+    }
+    if (minPrice !== undefined && Number.isFinite(minPrice)) {
+      list = list.filter((p) => p.price >= minPrice);
+    }
+    if (maxPrice !== undefined && Number.isFinite(maxPrice)) {
+      list = list.filter((p) => p.price <= maxPrice);
+    }
+    if (sortBy === 'price-asc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-desc') {
+      list.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating') {
+      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+
+    const total = list.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const start = (page - 1) * limit;
+    const paginated = list.slice(start, start + limit);
+
+    return NextResponse.json({
+      success: true,
+      data: paginated,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    });
+  }
 
   const cacheKey = `products:v2:list:${page}:${limit}:${category}:${highlight}:${search}:${sortBy}:${size}:${inStock}:${minPrice ?? ''}:${maxPrice ?? ''}`;
   const cacheTTL = 300;
@@ -95,10 +144,30 @@ export async function GET(request: NextRequest) {
 
     return withPublicCache(NextResponse.json(payload), 60);
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    );
+    console.warn('⚠️ Error fetching products from DB, falling back to mock data:', error);
+    let products = [...initialProducts];
+    if (category) {
+      products = products.filter(p => p.category?.toLowerCase() === category.toLowerCase());
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      products = products.filter(p => p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
+    }
+    const total = products.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const safePage = Math.min(page, totalPages);
+    const start = (safePage - 1) * limit;
+    const data = products.slice(start, start + limit);
+
+    return NextResponse.json({
+      success: true,
+      data,
+      pagination: {
+        page: safePage,
+        limit,
+        total,
+        totalPages,
+      },
+    });
   }
 }

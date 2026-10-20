@@ -8,6 +8,8 @@ import { toast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { initialCareers } from '@/data/mockData';
+
 interface Career {
   _id: string;
   title: string;
@@ -23,30 +25,30 @@ const CareerDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const [career, setCareer] = useState<Career | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchCareer = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/careers`);
       const result = await res.json();
       
-      if (result.success) {
+      if (result?.success && Array.isArray(result.data)) {
         const foundCareer = result.data.find((c: Career) => c.slug === params?.slug);
         if (foundCareer) {
           setCareer(foundCareer);
-        } else {
-          toast({ title: 'Error', description: 'Career not found', variant: 'destructive' });
+          return;
         }
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch career', variant: 'destructive' });
       }
-    } catch (error) {
-      console.error('Error fetching career:', error);
-      toast({ title: 'Error', description: 'Failed to fetch career', variant: 'destructive' });
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
+
+    // Fallback to initialCareers
+    const fallback =
+      initialCareers.find((c) => c.slug === params?.slug) || null;
+    setCareer(fallback);
   }, [params?.slug]);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, FolderTree, ClipboardList, Warehouse, Download, LogOut, User, MessageSquare, Mail, Megaphone, Menu, X, FileText, Briefcase, Coins, AlertTriangle, Gift, Users, ImagePlus, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, FolderTree, ClipboardList, Warehouse, Download, LogOut, User, MessageSquare, Mail, Megaphone, Menu, X, FileText, Briefcase, Coins, AlertTriangle, Gift, Users, ImagePlus, Settings, Sparkles } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { toast } from '@/hooks/use-toast';
 
@@ -9,6 +9,7 @@ const menuItems = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
   { label: 'Products', to: '/admin/products', icon: Package },
   { label: 'Categories', to: '/admin/categories', icon: FolderTree },
+  { label: 'Festive Banners', to: '/admin/festive-banners', icon: Sparkles },
   { label: 'Orders', to: '/admin/orders', icon: ClipboardList },
   { label: 'Messages', to: '/admin/messages', icon: Mail },
   { label: 'Reviews', to: '/admin/reviews', icon: MessageSquare },

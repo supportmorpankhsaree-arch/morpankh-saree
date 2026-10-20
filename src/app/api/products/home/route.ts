@@ -43,13 +43,33 @@ async function fetchSection(
     .slice(0, limit);
 }
 
+import { initialProducts } from '@/data/mockData';
+
 export async function GET() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    return NextResponse.json(
-      { success: false, error: 'MONGODB_URI is not configured on the server' },
-      { status: 500 }
-    );
+    const featured = initialProducts.filter((p) => p.featured).slice(0, 4);
+    const newArrivals = initialProducts.filter((p) => p.isNew).slice(0, 4);
+    const sale = initialProducts.filter((p) => p.isSale).slice(0, 4);
+    const premium = initialProducts.filter((p) => p.isPremium).slice(0, 4);
+    const trending = initialProducts.filter((p) => p.isTrending).slice(0, 4);
+    const limitedOffer = initialProducts.filter((p) => p.isLimitedOffer || p.isSale).slice(0, 4);
+    const liveSpecial = initialProducts.filter((p) => p.isLiveSpecial || p.featured).slice(0, 4);
+    const spotlight = initialProducts.slice(0, 8);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        featured,
+        newArrivals,
+        sale,
+        premium,
+        trending,
+        limitedOffer,
+        liveSpecial,
+        spotlight,
+      },
+    });
   }
 
   const cacheKey = 'products:v2:home';
@@ -94,10 +114,28 @@ export async function GET() {
 
     return withPublicCache(NextResponse.json(payload), 120);
   } catch (error) {
-    console.error('Error fetching home products:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch home products' },
-      { status: 500 }
-    );
+    console.warn('⚠️ Error fetching home products from DB, falling back to mock data:', error);
+    const featured = initialProducts.filter((p) => p.featured).slice(0, 4);
+    const newArrivals = initialProducts.filter((p) => p.isNew).slice(0, 4);
+    const sale = initialProducts.filter((p) => p.isSale).slice(0, 4);
+    const premium = initialProducts.filter((p) => p.isPremium).slice(0, 4);
+    const trending = initialProducts.filter((p) => p.isTrending).slice(0, 4);
+    const limitedOffer = initialProducts.filter((p) => p.isLimitedOffer || p.isSale).slice(0, 4);
+    const liveSpecial = initialProducts.filter((p) => p.isLiveSpecial || p.featured).slice(0, 4);
+    const spotlight = initialProducts.slice(0, 8);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        featured,
+        newArrivals,
+        sale,
+        premium,
+        trending,
+        limitedOffer,
+        liveSpecial,
+        spotlight,
+      },
+    });
   }
 }

@@ -8,6 +8,8 @@ import { toast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { initialBlogs } from '@/data/mockData';
+
 interface Blog {
   _id: string;
   title: string;
@@ -24,30 +26,30 @@ const BlogDetailPage = () => {
   const params = useParams();
   const router = useRouter();
   const [blog, setBlog] = useState<Blog | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchBlog = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await fetch(`/api/blogs`);
       const result = await res.json();
       
-      if (result.success) {
+      if (result?.success && Array.isArray(result.data)) {
         const foundBlog = result.data.find((b: Blog) => b.slug === params?.slug);
         if (foundBlog) {
           setBlog(foundBlog);
-        } else {
-          toast({ title: 'Error', description: 'Blog not found', variant: 'destructive' });
+          return;
         }
-      } else {
-        toast({ title: 'Error', description: 'Failed to fetch blog', variant: 'destructive' });
       }
-    } catch (error) {
-      console.error('Error fetching blog:', error);
-      toast({ title: 'Error', description: 'Failed to fetch blog', variant: 'destructive' });
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
+
+    // Fallback to initialBlogs
+    const fallback =
+      initialBlogs.find((b) => b.slug === params?.slug) || null;
+    setBlog(fallback);
   }, [params?.slug]);
 
   useEffect(() => {

@@ -8,9 +8,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
 
+import { initialProducts } from '@/data/mockData';
+
 export const runtime = 'nodejs';
 
-const uri = process.env.MONGODB_URI!;
+const uri = process.env.MONGODB_URI;
 
 function getSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -20,9 +22,48 @@ export async function GET(
   _req: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
-  try {
-    const { slug } = await context.params;
+  const { slug } = await context.params;
 
+  if (!uri) {
+    const p = initialProducts.find((item) => item.slug === slug || item.id === slug);
+    if (!p) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    return NextResponse.json({
+      _id: p.id,
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      basePrice: p.price,
+      comparePrice: p.comparePrice,
+      compareAtPrice: p.comparePrice,
+      description: p.description,
+      fabric: p.fabric,
+      fabricType: p.fabric,
+      category: p.category,
+      colors: p.colors,
+      hasSizes: p.hasSizes,
+      sizes: p.sizes,
+      stock: p.stock,
+      sku: p.sku,
+      tags: p.tags,
+      featured: p.featured,
+      isFeatured: p.featured,
+      isNew: p.isNew,
+      isSale: p.isSale,
+      isPremium: p.isPremium,
+      isTrending: p.isTrending,
+      isLiveSpecial: p.isLiveSpecial,
+      isLimitedOffer: p.isLimitedOffer,
+      rating: p.rating,
+      reviews: p.reviews,
+      reviewCount: p.reviews,
+      images: p.images,
+      isActive: true,
+    });
+  }
+
+  try {
     const client = await getMongoClient(uri);
     const db = client.db(getDatabaseName());
     const products = db.collection('products');
@@ -37,7 +78,8 @@ export async function GET(
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      const p = initialProducts.find((item) => item.slug === slug || item.id === slug) || initialProducts[0];
+      return NextResponse.json({ ...p, _id: p.id });
     }
 
     // ── Compute derived fields ──────────────────────────────

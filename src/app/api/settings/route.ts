@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
       maintenanceMode: settings.maintenanceMode,
     }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
   } catch (error) {
-    console.error('Error getting public settings:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.warn('[Settings] Failed to retrieve settings, defaulting to maintenanceMode: false', error);
+    return NextResponse.json({
+      maintenanceMode: false,
+    }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
   }
 }

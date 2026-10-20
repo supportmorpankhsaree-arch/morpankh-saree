@@ -273,8 +273,8 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {sortedOrders.slice(0, 5).map((order) => (
-                <div key={order.id} className="flex items-center justify-between py-3 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg px-3">
+              {sortedOrders.slice(0, 5).map((order, orderIdx) => (
+                <div key={`dash-order-${order.id || orderIdx}-${orderIdx}`} className="flex items-center justify-between py-3 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg px-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-medium text-sm">{order.orderNumber}</p>

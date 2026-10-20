@@ -18,7 +18,7 @@ import { useStore } from '@/store/useStore';
 
 import { toast } from '@/hooks/use-toast';
 
-import { Product } from '@/data/mockData';
+import { Product, initialProducts } from '@/data/mockData';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -89,34 +89,36 @@ const ProductDetail = () => {
       try {
         const res = await fetch(`/api/product/${slug}`);
         const data = await res.json();
-        if (!res.ok || data?.error) {
-          setProduct(null);
-          setRelatedProducts([]);
+        if (res.ok && !data?.error && data?._id) {
+          const mapped = mapDetailResponse(data as Record<string, unknown>);
+          setProduct(mapped);
+
+          if (mapped.category) {
+            const relatedRes = await fetch(
+              `/api/products?category=${encodeURIComponent(mapped.category)}&limit=5`
+            );
+            const relatedJson = await relatedRes.json();
+            if (relatedRes.ok && relatedJson?.success && Array.isArray(relatedJson.data) && relatedJson.data.length > 0) {
+              setRelatedProducts(
+                (relatedJson.data as Product[]).filter((p) => p.id !== mapped.id).slice(0, 4)
+              );
+              return;
+            }
+          }
+          const rel = initialProducts.filter((p) => p.id !== mapped.id).slice(0, 4);
+          setRelatedProducts(rel);
           return;
         }
-
-        const mapped = mapDetailResponse(data as Record<string, unknown>);
-        setProduct(mapped);
-
-        if (mapped.category) {
-          const relatedRes = await fetch(
-            `/api/products?category=${encodeURIComponent(mapped.category)}&limit=5`
-          );
-          const relatedJson = await relatedRes.json();
-          if (relatedRes.ok && relatedJson?.success && Array.isArray(relatedJson.data)) {
-            setRelatedProducts(
-              (relatedJson.data as Product[]).filter((p) => p.id !== mapped.id).slice(0, 4)
-            );
-          } else {
-            setRelatedProducts([]);
-          }
-        }
       } catch {
-        setProduct(null);
-        setRelatedProducts([]);
+        // ignore
       } finally {
         setLoadingProduct(false);
       }
+
+      // No product found in database
+      setProduct(null);
+      setRelatedProducts([]);
+      setLoadingProduct(false);
     };
 
     void loadProduct();
@@ -742,10 +744,31 @@ const ProductDetail = () => {
 
     // Open the mandatory notice modal before proceeding to checkout
     setIsBuyNowNoticeOpen(true);
-
   };
 
+  if (loadingProduct) {
+    return (
+      <PublicLayout>
+        <div className="container mx-auto px-4 py-20 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+        </div>
+      </PublicLayout>
+    );
+  }
 
+  if (!product) {
+    return (
+      <PublicLayout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h2 className="text-2xl font-bold mb-4">Product Not Found</h2>
+          <p className="text-muted-foreground mb-6">The requested product could not be found.</p>
+          <Link href="/products" className="btn-primary inline-block">
+            Browse All Products
+          </Link>
+        </div>
+      </PublicLayout>
+    );
+  }
 
   return (
 

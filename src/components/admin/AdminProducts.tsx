@@ -940,8 +940,8 @@ const AdminProducts = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((p) => (
-                  <tr key={p._id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                {filteredProducts.map((p, idx) => (
+                  <tr key={`admin-prod-${p._id || idx}-${idx}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="p-4 flex items-center gap-3">
                       <img
                         src={p.colors?.[0]?.images?.[0] || p.images?.[0] || '/placeholder.svg'}
@@ -1400,7 +1400,9 @@ const AdminProducts = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Category</label>
                   <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full border border-border rounded-lg px-3 py-2 bg-background text-sm">
-                    {categories.map((c) => <option key={c._id} value={c.slug}>{c.name}</option>)}
+                    {Array.from(new Map((categories || []).map((c) => [c._id || c.slug, c])).values()).map((c, idx) => (
+                      <option key={`prod-cat-${c._id || c.slug}-${idx}`} value={c.slug}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
               )}

@@ -172,8 +172,8 @@ const AdminCategories = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((cat) => (
-          <div key={cat.id} className="bg-card rounded-xl border border-border overflow-hidden card-hover">
+        {categories.map((cat, idx) => (
+          <div key={`admin-cat-${cat.id || idx}-${idx}`} className="bg-card rounded-xl border border-border overflow-hidden card-hover">
             <div className="aspect-video overflow-hidden">
               <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
             </div>
