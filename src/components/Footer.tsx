@@ -86,23 +86,18 @@ const Footer = () => {
                 <Facebook className="h-4 w-4" />
               </a>
               <a 
-                href="https://www.instagram.com/morpankhsaree?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw%3D%3D" 
+                href="https://www.instagram.com/morpankhsaree?dlrf=YmYxZm9rZ2ZtZjI1"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"
               >
                 <Instagram className="h-4 w-4" />
               </a>
-              <a 
-                href="https://www.youtube.com/channel/UCH331lbGaXrlDH4Qua-YA9g" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"
-              >
+              <span className="p-2 bg-background/10 rounded-full">
                 <Youtube className="h-4 w-4" />
-              </a>
+              </span>
               <a 
-                href="https://api.whatsapp.com/send/?phone=919096971199&text&type=phone_number&app_absent=0" 
+                href="https://api.whatsapp.com/send/?phone=919922771199&text&type=phone_number&app_absent=0"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"

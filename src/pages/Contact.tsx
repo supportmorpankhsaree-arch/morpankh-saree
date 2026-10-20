@@ -96,13 +96,13 @@ const Contact = () => {
     {
       icon: Phone,
       label: 'Call Us',
-      value: '+91 9096971199',
+      value: '+91 99227 71199',
       sub: 'All Days: 10:00 AM - 10:00 PM',
     },
     {
       icon: Mail,
       label: 'Email Us',
-      value: 'nextlevelluxuries3@gmail.com',
+      value: 'morpankhsarees1@gmail.com',
       sub: 'Reply within 24 hours',
     },
     {

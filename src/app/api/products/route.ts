@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
-import { withPublicCache } from '@/lib/httpCache';
 import {
   buildProductQuery,
   hasAvailableStock,
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search')?.trim() || '';
   const sortBy = searchParams.get('sort')?.trim() || '';
   const size = searchParams.get('size')?.trim() || '';
-  const inStock = searchParams.get('inStock') !== 'false';
+  const inStock = searchParams.get('inStock') === 'true';
   const minPrice = searchParams.get('minPrice') !== null ? Number(searchParams.get('minPrice')) : undefined;
   const maxPrice = searchParams.get('maxPrice') !== null ? Number(searchParams.get('maxPrice')) : undefined;
 
@@ -142,7 +141,9 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return withPublicCache(NextResponse.json(payload), 60);
+    return NextResponse.json(payload, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch (error) {
     console.warn('⚠️ Error fetching products from DB, falling back to mock data:', error);
     let products = [...initialProducts];

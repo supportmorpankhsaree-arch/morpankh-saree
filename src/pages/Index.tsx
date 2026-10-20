@@ -35,9 +35,10 @@ const defaultApprovedReviews: ApprovedReviewItem[] = initialReviews.map((r) => (
 }));
 
 const heroImages = [
-  '/home_img_2.png',
-  '/HeroMorphank1.png',
-  '/HeroMorphank.png',
+  '/1.jpeg',
+  '/2.jpeg',
+  '/3.jpeg',
+  '/4.jpeg',
 ];
 
 const Section = ({
@@ -323,13 +324,19 @@ const Index = () => {
   useEffect(() => {
     const loadHome = async () => {
       try {
-        const res = await fetch('/api/products/home');
+        const res = await fetch('/api/products/home', { cache: 'no-store' });
         const json = await res.json();
         if (
           res.ok &&
           json?.success &&
           json.data &&
-          (json.data.featured?.length || json.data.spotlight?.length)
+          Array.isArray(json.data.featured) &&
+          Array.isArray(json.data.newArrivals) &&
+          Array.isArray(json.data.sale) &&
+          Array.isArray(json.data.premium) &&
+          Array.isArray(json.data.trending) &&
+          Array.isArray(json.data.limitedOffer) &&
+          Array.isArray(json.data.liveSpecial)
         ) {
           setHomeProducts(json.data);
           return;
@@ -350,9 +357,9 @@ const Index = () => {
     }
     const loadSearch = async () => {
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(q)}&limit=24`);
+        const res = await fetch(`/api/products?search=${encodeURIComponent(q)}&limit=24`, { cache: 'no-store' });
         const json = await res.json();
-        if (res.ok && json?.success && Array.isArray(json.data) && json.data.length > 0) {
+        if (res.ok && json?.success && Array.isArray(json.data)) {
           setSearchResults(json.data as Product[]);
           return;
         }
