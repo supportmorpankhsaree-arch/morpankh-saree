@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
-import { withPublicCache } from '@/lib/httpCache';
 import { hasAvailableStock, mapProductFromDoc, checkAndExpireLimitedOffer } from '@/lib/mapProduct';
 import { cacheOrFetch } from '@/lib/redis';
 
@@ -112,7 +111,9 @@ export async function GET() {
       };
     });
 
-    return withPublicCache(NextResponse.json(payload), 120);
+    return NextResponse.json(payload, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch (error) {
     console.warn('⚠️ Error fetching home products from DB, falling back to mock data:', error);
     const featured = initialProducts.filter((p) => p.featured).slice(0, 4);
