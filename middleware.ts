@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  getAdminSessionCookieName,
+  isAdminSessionConfigured,
+  verifyAdminSession,
+} from '@/lib/adminSession';
 
 // Simple in-memory cache for maintenance status to avoid Redis calls on every request
 let maintenanceCache: { maintenanceMode: boolean; timestamp: number } | null = null;
@@ -52,6 +57,29 @@ async function getMaintenanceStatus(): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith('/api/admin/')) {
+    const isLoginRoute = [
+      '/api/admin/login',
+      '/api/admin/request-otp',
+      '/api/admin/verify-otp',
+      '/api/admin/logout',
+    ].includes(pathname);
+
+    if (!isLoginRoute) {
+      if (!isAdminSessionConfigured()) {
+        return NextResponse.json(
+          { error: 'Admin session security is not configured on the server' },
+          { status: 500 }
+        );
+      }
+
+      const session = request.cookies.get(getAdminSessionCookieName())?.value;
+      if (!(await verifyAdminSession(session))) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+  }
 
   // Skip maintenance check for excluded paths
   if (isExcludedPath(pathname)) {

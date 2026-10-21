@@ -503,6 +503,11 @@ export const useStore = create<StoreState>()(
         }
       },
       logout: () => {
+        if (get().isAdmin) {
+          fetch('/api/admin/logout', { method: 'POST' }).catch((error) => {
+            console.error('Failed to clear admin session:', error);
+          });
+        }
         localStorage.removeItem('adminToken');
         localStorage.removeItem('loginTime');
         localStorage.removeItem('isAdmin');
@@ -527,9 +532,9 @@ export const useStore = create<StoreState>()(
         if (token && loginTime) {
           const loginTimestamp = parseInt(loginTime);
           const currentTime = Date.now();
-          const twentyFourHours = 24 * 60 * 60 * 1000;
+          const maxSessionAge = isAdmin ? 8 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
           
-          if ((currentTime - loginTimestamp) < twentyFourHours) {
+          if ((currentTime - loginTimestamp) < maxSessionAge) {
             // Restore session
             set({
               isLoggedIn: true,
@@ -555,12 +560,13 @@ export const useStore = create<StoreState>()(
       checkTokenValidity: () => {
         const loginTime = localStorage.getItem('loginTime');
         if (!loginTime) return false;
-        
+
         const currentTime = Date.now();
         const loginTimestamp = parseInt(loginTime);
-        const twentyFourHours = 24 * 60 * 60 * 1000;
+        const isAdmin = localStorage.getItem('isAdmin') === 'true';
+        const maxSessionAge = isAdmin ? 8 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
         
-        return (currentTime - loginTimestamp) < twentyFourHours;
+        return (currentTime - loginTimestamp) < maxSessionAge;
       },
     }),
     {
