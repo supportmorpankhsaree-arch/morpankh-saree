@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAdminEmail, InvalidAdminEmailOtpError, verifyAdminEmailOtp } from '@/lib/adminOtp';
-import { createAdminSession, getAdminSessionCookieName } from '@/lib/adminSession';
+import { ExpiredAdminEmailOtpError, getAdminEmail, InvalidAdminEmailOtpError, verifyAdminEmailOtp } from '@/lib/adminOtp';
+import {
+  createAdminSession,
+  getAdminOtpChallengeCookieName,
+  getAdminSessionCookieName,
+} from '@/lib/adminSession';
 
 export const runtime = 'nodejs';
 
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
-    await verifyAdminEmailOtp(otp);
+    await verifyAdminEmailOtp(otp, request.cookies.get(getAdminOtpChallengeCookieName())?.value);
 
     const sessionToken = await createAdminSession(inputEmail);
     const response = NextResponse.json({
@@ -47,6 +51,13 @@ export async function POST(request: NextRequest) {
       sameSite: 'strict',
       path: '/',
       maxAge: 8 * 60 * 60,
+    });
+    response.cookies.set(getAdminOtpChallengeCookieName(), '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 0,
     });
     return response;
   } catch (error) {

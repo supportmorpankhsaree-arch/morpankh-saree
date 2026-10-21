@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
+import { Collection } from 'mongodb';
 import nodemailer from 'nodemailer';
 import { getDatabaseName, getMongoClient } from '@/lib/database';
+import { createAdminOtpChallenge, verifyAdminOtpChallenge } from '@/lib/adminSession';
 
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 
@@ -13,6 +15,7 @@ interface AdminOtpDocument {
 }
 
 export class InvalidAdminEmailOtpError extends Error {}
+export class ExpiredAdminEmailOtpError extends InvalidAdminEmailOtpError {}
 
 function normalize(value: string) {
   const trimmed = value.trim();
@@ -89,6 +92,7 @@ export async function sendAdminEmailOtp() {
   const otp = randomInt(100_000, 1_000_000).toString();
   const expiresAt = new Date(Date.now() + OTP_LIFETIME_MS);
   const otpHash = await bcrypt.hash(otp, 10);
+  const challengeToken = await createAdminOtpChallenge(email, otp);
   const otpCollection = await getOtpCollection();
 
   await otpCollection.updateOne(
@@ -116,23 +120,53 @@ export async function sendAdminEmailOtp() {
     `,
   });
 
-  return email;
+  return { email, challengeToken };
 }
 
-export async function verifyAdminEmailOtp(otp: string) {
+export async function verifyAdminEmailOtp(otp: string, challengeToken?: string) {
   const email = getAdminEmail();
-  const otpCollection = await getOtpCollection();
-  const record = await otpCollection.findOne({ email });
+  const verifyChallengeFallback = async () => {
+    const challengeStatus = await verifyAdminOtpChallenge(challengeToken, email, otp);
+    if (challengeStatus === 'valid') return;
+    if (challengeStatus === 'expired') {
+      throw new ExpiredAdminEmailOtpError('OTP expired. Request a new code and try again.');
+    }
+    if (challengeStatus === 'invalid') {
+      throw new InvalidAdminEmailOtpError('Invalid OTP');
+    }
+    throw new InvalidAdminEmailOtpError('OTP not found. Request a new code and try again.');
+  };
+
+  let otpCollection: Collection<AdminOtpDocument>;
+  let record: AdminOtpDocument | null;
+  try {
+    otpCollection = await getOtpCollection();
+    record = await otpCollection.findOne({ email });
+  } catch (error) {
+    console.warn('Admin OTP database lookup failed; checking the encrypted browser challenge.');
+    const challengeStatus = await verifyAdminOtpChallenge(challengeToken, email, otp);
+    if (challengeStatus === 'valid') return;
+    if (challengeStatus === 'expired') {
+      throw new ExpiredAdminEmailOtpError('OTP expired. Request a new code and try again.');
+    }
+    if (challengeStatus === 'invalid') {
+      throw new InvalidAdminEmailOtpError('Invalid OTP');
+    }
+    throw error;
+  }
 
   if (!record) {
-    throw new InvalidAdminEmailOtpError('OTP not found. Request a new code and try again.');
+    await verifyChallengeFallback();
+    return;
   }
   if (record.expiresAt.getTime() <= Date.now()) {
     await otpCollection.deleteOne({ email });
-    throw new InvalidAdminEmailOtpError('OTP expired. Request a new code and try again.');
+    await verifyChallengeFallback();
+    return;
   }
   if (!(await bcrypt.compare(otp, record.otpHash))) {
-    throw new InvalidAdminEmailOtpError('Invalid OTP');
+    await verifyChallengeFallback();
+    return;
   }
 
   await otpCollection.deleteOne({ email });

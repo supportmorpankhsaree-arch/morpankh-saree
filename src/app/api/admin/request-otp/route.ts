@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendAdminEmailOtp, verifyAdminCredentials } from '@/lib/adminOtp';
+import { getAdminOtpChallengeCookieName, getAdminOtpChallengeDurationSeconds } from '@/lib/adminSession';
 
 export const runtime = 'nodejs';
 
@@ -18,8 +19,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid admin credentials' }, { status: 401 });
     }
 
-    const email = await sendAdminEmailOtp();
-    return NextResponse.json({ message: 'OTP sent to admin email', email });
+    const { email, challengeToken } = await sendAdminEmailOtp();
+    const response = NextResponse.json({ message: 'OTP sent to admin email', email });
+    response.cookies.set(getAdminOtpChallengeCookieName(), challengeToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: getAdminOtpChallengeDurationSeconds(),
+    });
+    return response;
   } catch (error) {
     console.error('Unable to send admin login OTP email:', error);
     const message = error instanceof Error ? error.message : 'Unable to send OTP email';

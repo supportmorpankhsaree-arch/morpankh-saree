@@ -1,5 +1,7 @@
 const SESSION_COOKIE = 'admin_session';
+const OTP_CHALLENGE_COOKIE = 'admin_otp_challenge';
 const SESSION_DURATION_SECONDS = 8 * 60 * 60;
+const OTP_CHALLENGE_DURATION_SECONDS = 10 * 60;
 const encoder = new TextEncoder();
 
 function encodeBase64Url(bytes: Uint8Array) {
@@ -35,13 +37,74 @@ async function getSigningKey() {
   );
 }
 
+async function getEncryptionKey() {
+  const secretDigest = await crypto.subtle.digest('SHA-256', encoder.encode(getSessionSecret()));
+  return crypto.subtle.importKey('raw', secretDigest, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+}
+
 export function getAdminSessionCookieName() {
   return SESSION_COOKIE;
+}
+
+export function getAdminOtpChallengeCookieName() {
+  return OTP_CHALLENGE_COOKIE;
+}
+
+export function getAdminOtpChallengeDurationSeconds() {
+  return OTP_CHALLENGE_DURATION_SECONDS;
 }
 
 export function isAdminSessionConfigured() {
   const secret = process.env.ADMIN_SESSION_SECRET;
   return Boolean(secret && secret.length >= 32);
+}
+
+export async function createAdminOtpChallenge(email: string, otp: string) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const payload = encoder.encode(JSON.stringify({
+    email,
+    otp,
+    exp: issuedAt + OTP_CHALLENGE_DURATION_SECONDS,
+  }));
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    await getEncryptionKey(),
+    payload
+  );
+  return `${encodeBase64Url(iv)}.${encodeBase64Url(new Uint8Array(ciphertext))}`;
+}
+
+export async function verifyAdminOtpChallenge(token: string | undefined, email: string, otp: string) {
+  if (!token) return 'missing' as const;
+
+  try {
+    const [encodedIv, encodedCiphertext, ...extraParts] = token.split('.');
+    if (!encodedIv || !encodedCiphertext || extraParts.length > 0) return 'invalid' as const;
+
+    const plaintext = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: decodeBase64Url(encodedIv) },
+      await getEncryptionKey(),
+      decodeBase64Url(encodedCiphertext)
+    );
+    const payload: unknown = JSON.parse(new TextDecoder().decode(plaintext));
+    if (
+      !payload ||
+      typeof payload !== 'object' ||
+      !('email' in payload) ||
+      payload.email !== email ||
+      !('otp' in payload) ||
+      typeof payload.otp !== 'string' ||
+      !('exp' in payload) ||
+      typeof payload.exp !== 'number'
+    ) {
+      return 'invalid' as const;
+    }
+    if (payload.exp <= Math.floor(Date.now() / 1000)) return 'expired' as const;
+    return payload.otp === otp ? 'valid' as const : 'invalid' as const;
+  } catch {
+    return 'invalid' as const;
+  }
 }
 
 export async function createAdminSession(email: string) {
