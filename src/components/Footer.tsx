@@ -93,7 +93,7 @@ const Footer = () => {
               >
                 <Instagram className="h-4 w-4" />
               </a>
-              <span className="p-2 bg-background/10 rounded-full">
+              <span className="p-2 bg-background/10 rounded-full" aria-hidden="true">
                 <Youtube className="h-4 w-4" />
               </span>
               <a 

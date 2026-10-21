@@ -80,11 +80,8 @@ const PublicLayout = ({ children }: { children: ReactNode }) => {
           />
         </a>
 
-        <a
-          href="https://www.youtube.com/channel/UCH331lbGaXrlDH4Qua-YA9g"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open YouTube"
+        <span
+          aria-hidden="true"
           className="floating-action relative h-12 w-12 rounded-full flex items-center justify-center shadow-xl transition-transform hover:scale-110 active:scale-95"
           style={{ background: '#FF0000', color: 'white' }}
         >
@@ -93,7 +90,7 @@ const PublicLayout = ({ children }: { children: ReactNode }) => {
             style={{ boxShadow: '0 0 0 0 rgba(255, 0, 0, 0.55)' }}
           />
           <Youtube className="h-6 w-6" />
-        </a>
+        </span>
       </div>
 
       <RecentOrdersToast />
