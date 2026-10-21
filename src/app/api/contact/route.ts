@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMongoClient, getDatabaseName } from '@/lib/database';
+import { getAdminSessionCookieName, verifyAdminSession } from '@/lib/adminSession';
 import { WithId, Document } from 'mongodb';
 
 export const runtime = 'nodejs';
@@ -25,15 +26,6 @@ function isValidMobileNumber(value: string): boolean {
   return /^\d{10}$/.test(value);
 }
 
-function isAdminRequest(request: NextRequest) {
-  const auth = (request.headers.get('authorization') || '').trim();
-  const bearerMatch = auth.match(/^Bearer\s+(.+)$/i);
-  const rawToken = (bearerMatch?.[1] ?? auth).trim();
-  const token = rawToken.replace(/^"|"$/g, '').replace(/^'|'$/g, '').trim();
-  return token === 'admin-token';
-}
-
-
 export async function GET(request: NextRequest) {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
@@ -43,24 +35,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (!isAdminRequest(request)) {
-    const auth = request.headers.get('authorization');
-    const authTrimmed = (auth || '').trim();
-    const bearerMatch = authTrimmed.match(/^Bearer\s+(.+)$/i);
-    const rawToken = (bearerMatch?.[1] ?? authTrimmed).trim();
-    const token = rawToken.replace(/^"|"$/g, '').replace(/^'|'$/g, '').trim();
-
+  const session = request.cookies.get(getAdminSessionCookieName())?.value;
+  if (!(await verifyAdminSession(session))) {
     return NextResponse.json(
-      {
-        error: 'Unauthorized',
-        ...(process.env.NODE_ENV !== 'production'
-          ? {
-              hasAuthorizationHeader: Boolean(auth && authTrimmed.length > 0),
-              authorizationHeaderPrefix: authTrimmed.slice(0, 10),
-              parsedTokenLength: token.length,
-            }
-          : null),
-      },
+      { error: 'Unauthorized' },
       { status: 401 }
     );
   }
