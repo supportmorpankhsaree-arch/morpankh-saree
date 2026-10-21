@@ -1,5 +1,10 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { createAdminSession, verifyAdminSession } from './adminSession';
+import {
+  createAdminOtpChallenge,
+  createAdminSession,
+  verifyAdminOtpChallenge,
+  verifyAdminSession,
+} from './adminSession';
 
 const previousSecret = process.env.ADMIN_SESSION_SECRET;
 
@@ -27,5 +32,13 @@ describe('admin sessions', () => {
 
   it('rejects missing tokens', async () => {
     expect(await verifyAdminSession()).toBe(false);
+  });
+
+  it('validates the encrypted OTP challenge against the email and code', async () => {
+    const challenge = await createAdminOtpChallenge('admin@example.com', '123456');
+
+    expect(await verifyAdminOtpChallenge(challenge, 'admin@example.com', '123456')).toBe('valid');
+    expect(await verifyAdminOtpChallenge(challenge, 'admin@example.com', '654321')).toBe('invalid');
+    expect(await verifyAdminOtpChallenge(challenge, 'other@example.com', '123456')).toBe('invalid');
   });
 });

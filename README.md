@@ -4,7 +4,7 @@ TODO: Document your project here
 
 ## Admin email OTP configuration
 
-Admin sign-in sends a six-digit OTP to `ADMIN_EMAIL` after the email and password are validated. Configure the following server-side environment variables in local development and in the deployment environment:
+Admin sign-in sends a six-digit OTP to `ADMIN_EMAIL` after the email and password are validated. The OTP is stored hashed in MongoDB and the browser receives a short-lived, encrypted HTTP-only challenge cookie, so verification can still succeed if deployed login and verification instances see different OTP records. Configure the following server-side environment variables in local development and in the deployment environment:
 
 ```env
 ADMIN_SESSION_SECRET=generate-a-random-secret-at-least-32-characters-long
