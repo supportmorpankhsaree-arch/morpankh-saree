@@ -90,13 +90,13 @@ const Contact = () => {
     {
       icon: MapPin,
       label: 'Visit Us',
-      value: 'Shop No 48/3, Baba Pathare Patil Complex,',
+      value: 'Sr No 48/3, Baba Pathare Patil Complex,',
       sub: 'Chatrapati Shivaji Maharaj Chowk, Kharadi Road, Chandan Nagar, Pune : 411014 India',
     },
     {
       icon: Phone,
       label: 'Call Us',
-      value: '+91 99227 71199',
+      value: '+91 99606 21199',
       sub: 'All Days: 10:00 AM - 10:00 PM',
     },
     {
