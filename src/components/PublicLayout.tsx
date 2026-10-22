@@ -67,7 +67,7 @@ const PublicLayout = ({ children }: { children: ReactNode }) => {
         )}
 
         <a
-          href="https://api.whatsapp.com/send/?phone=919922771199&text&type=phone_number&app_absent=0"
+          href="https://api.whatsapp.com/send/?phone=919960621199&text&type=phone_number&app_absent=0"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Chat on WhatsApp"

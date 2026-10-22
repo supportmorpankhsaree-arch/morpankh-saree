@@ -38,7 +38,7 @@ const Footer = () => {
             </p>
             <h4 className="font-display text-lg font-semibold mb-4">Address</h4>
             <div className="text-sm text-background/70 leading-relaxed">
-              <p className="mb-2">Shop No 48/3, Baba Pathare Patil Complex,</p>
+              <p className="mb-2">Sr No 48/3, Baba Pathare Patil Complex,</p>
               <p className="mb-2">Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
               <p>Chandan Nagar, Pune : 411014 India</p>
             </div>
@@ -97,7 +97,7 @@ const Footer = () => {
                 <Youtube className="h-4 w-4" />
               </span>
               <a 
-                href="https://api.whatsapp.com/send/?phone=919922771199&text&type=phone_number&app_absent=0"
+                href="https://api.whatsapp.com/send/?phone=919960621199&text&type=phone_number&app_absent=0"
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"

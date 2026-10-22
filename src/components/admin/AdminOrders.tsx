@@ -529,7 +529,7 @@ const AdminOrders = () => {
 
             <div class="shop-section" style="font-size: 30px; line-height: 1.35; color: #333; text-align: right;">
 
-              <p style="margin: 0;">Add - Shop No 48/3, Baba Pathare Patil Complex,Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
+              <p style="margin: 0;">Add - Sr No 48/3, Baba Pathare Patil Complex,Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
 
               <p style="margin: 0;">Chandan Nagar, Pune - 411014</p>
 
@@ -952,7 +952,7 @@ const AdminOrders = () => {
 
           <div class="shop-section" style="font-size: 30px; line-height: 1.35; color: #333; text-align: right;">
 
-            <p style="margin: 0;">Add - Shop No 48/3, Baba Pathare Patil Complex,Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
+            <p style="margin: 0;">Add - Sr No 48/3, Baba Pathare Patil Complex,Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
 
             <p style="margin: 0;">Chandan Nagar, Pune - 411014</p>
 
