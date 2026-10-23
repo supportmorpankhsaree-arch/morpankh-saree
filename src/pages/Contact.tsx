@@ -364,14 +364,16 @@ const Contact = () => {
                     href="https://www.google.com/maps?q=Chhatrapati%20shivaji%20maharaj%20chauk%2C%20Chandan%20Nagar%2C%20Pune%2C%20Maharashtra%20411014"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-semibold text-sm mb-0.5 hover:underline underline-offset-4"
+                    className="font-bold text-sm mb-0.5 hover:underline underline-offset-4"
                   >
                     {item.value}
                   </a>
                 ) : (
                   <p className="font-semibold text-sm mb-0.5">{item.value}</p>
                 )}
-                <p className="text-xs text-muted-foreground">{item.sub}</p>
+                <p className={item.label === 'Visit Us' ? 'text-sm font-bold' : 'text-xs text-muted-foreground'}>
+                  {item.sub}
+                </p>
               </div>
             ))}
           </div>
