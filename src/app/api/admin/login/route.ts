@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendAdminEmailOtp, verifyAdminCredentials } from '@/lib/adminOtp';
-import { getAdminOtpChallengeCookieName, getAdminOtpChallengeDurationSeconds } from '@/lib/adminSession';
+import { getAdminEmail, verifyAdminCredentials } from '@/lib/adminOtp';
+import { createAdminSession, getAdminSessionCookieName } from '@/lib/adminSession';
 
 export const runtime = 'nodejs';
+
+const SESSION_DURATION_SECONDS = 8 * 60 * 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,19 +32,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email: otpEmail, challengeToken } = await sendAdminEmailOtp();
-    const response = NextResponse.json({ message: 'OTP sent to admin email', requiresOtp: true, email: otpEmail });
-    response.cookies.set(getAdminOtpChallengeCookieName(), challengeToken, {
+    const adminEmail = getAdminEmail();
+    const sessionToken = await createAdminSession(adminEmail);
+    const response = NextResponse.json({
+      message: 'Admin login successful',
+      token: 'admin-token',
+      user: {
+        id: 'admin',
+        name: 'Admin',
+        email: adminEmail,
+        verified: true,
+      },
+    });
+    response.cookies.set(getAdminSessionCookieName(), sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       path: '/',
-      maxAge: getAdminOtpChallengeDurationSeconds(),
+      maxAge: SESSION_DURATION_SECONDS,
     });
     return response;
   } catch (error) {
-    console.error('Admin login OTP email failed:', error);
-    const msg = error instanceof Error ? error.message : 'Unable to send OTP email';
-    return NextResponse.json({ error: msg }, { status: 502 });
+    console.error('Admin login failed:', error);
+    const message = error instanceof Error ? error.message : 'Unable to complete admin login';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
