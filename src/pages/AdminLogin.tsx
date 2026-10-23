@@ -2,15 +2,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { toast } from '@/hooks/use-toast';
-import { ShieldCheck, Lock, Mail, ArrowRight, KeyRound } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, ArrowRight } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import Image from 'next/image';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useStore();
   const router = useRouter();
@@ -28,61 +26,14 @@ const AdminLogin = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setOtp('');
-        setStep('otp');
-        toast({ title: 'OTP sent', description: `Check your email ${data.email}.` });
+        login(data.user, data.token, true);
+        toast({ title: 'Welcome, Admin!' });
+        router.push('/admin');
       } else {
         toast({ title: data.error || 'Invalid admin credentials', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Login failed. Please try again.', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/admin/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-      const data = await response.json();
-
-      if (response.ok) {
-        login(data.user, data.token, true);
-        toast({ title: 'Welcome, Admin!' });
-        router.push('/admin');
-      } else {
-        toast({ title: data.error || 'OTP verification failed', variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: 'OTP verification failed. Please try again.', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/admin/request-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        toast({ title: data.error || 'Could not resend OTP', variant: 'destructive' });
-        return;
-      }
-      setOtp('');
-      toast({ title: 'OTP resent', description: `Check your email ${data.email}.` });
-    } catch {
-      toast({ title: 'Could not resend OTP. Please try again.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +113,6 @@ const AdminLogin = () => {
             </p>
           </div>
 
-          {step === 'credentials' ? (
           <form onSubmit={handleSubmit} className="space-y-4 s2">
             <div>
               <label className="block text-xs font-medium text-muted-foreground mb-1">
@@ -215,60 +165,6 @@ const AdminLogin = () => {
               )}
             </button>
           </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-4 s2">
-              <div className="text-center">
-                <Mail className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Enter the six-digit code sent to {email}.
-                </p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  Verification code
-                </label>
-                <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="Enter 6-digit OTP"
-                    required
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="\d{6}"
-                    maxLength={6}
-                    className="w-full border rounded-xl pl-10 pr-4 py-3 bg-background text-sm tracking-[0.3em] focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading || otp.length !== 6}
-                className="btn-main w-full py-3.5 rounded-xl font-semibold text-sm bg-primary text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                {isLoading ? 'Verifying...' : <>Verify OTP <ArrowRight className="h-4 w-4" /></>}
-              </button>
-              <div className="flex items-center justify-between text-xs">
-                <button
-                  type="button"
-                  onClick={() => { setStep('credentials'); setOtp(''); }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  Back to sign in
-                </button>
-                <button
-                  type="button"
-                  onClick={handleResendOtp}
-                  disabled={isLoading}
-                  className="text-primary hover:underline disabled:opacity-50"
-                >
-                  Resend OTP
-                </button>
-              </div>
-            </form>
-          )}
 
           {/* FOOTER */}
           <p className="text-center text-xs text-muted-foreground mt-8">
