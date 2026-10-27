@@ -35,10 +35,10 @@ const defaultApprovedReviews: ApprovedReviewItem[] = initialReviews.map((r) => (
 }));
 
 const heroImages = [
-  '/1.jpeg',
-  '/2.jpeg',
-  '/3.jpeg',
-  '/4.jpeg',
+  '/banner%201.png',
+  '/banner%202.png',
+  '/banner%203.png',
+  '/banner%204.png',
 ];
 
 const Section = ({
