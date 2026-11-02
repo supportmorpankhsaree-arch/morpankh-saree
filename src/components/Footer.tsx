@@ -12,7 +12,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo Section */}
           <div>
-            <Image src={logo} alt="Morpankh Saree" height={120} width={120} />
+            <div className="inline-block rounded-lg bg-white p-2 mb-3">
+              <Image src={logo} alt="Morpankh Saree" height={120} width={120} />
+            </div>
             <p className="text-background/70 text-sm leading-relaxed">
               परंपरेचा मोरपंखी स्पर्श, सौंदर्याची नवी ओळख
             </p>
