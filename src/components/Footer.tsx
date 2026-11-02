@@ -38,7 +38,7 @@ const Footer = () => {
             </p>
             <h4 className="font-display text-lg font-semibold mb-4">Address</h4>
             <div className="text-sm text-background/70 leading-relaxed">
-              <p className="mb-2">Sr No 48/3, Baba Pathare Patil Complex,</p>
+              <p className="mb-2 font-bold">MORPANKH SAREE</p>
               <p className="mb-2">Chatrapati Shivaji Maharaj Chowk, Kharadi Road,</p>
               <p>Chandan Nagar, Pune : 411014 India</p>
             </div>
@@ -77,14 +77,9 @@ const Footer = () => {
             </div>
             <h4 className="font-display text-lg font-semibold mb-3">Follow Us</h4>
             <div className="flex gap-3">
-              <a 
-                href="https://www.facebook.com/people/Morpankh-Sarees/100076174158976/?rdid=EdmHbLjUb5E8ruwj&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F189HUoPmQo%2F" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"
-              >
+              <span className="p-2 bg-background/10 rounded-full" aria-hidden="true">
                 <Facebook className="h-4 w-4" />
-              </a>
+              </span>
               <a 
                 href="https://www.instagram.com/morpankhsaree?dlrf=YmYxZm9rZ2ZtZjI1"
                 target="_blank" 
