@@ -90,7 +90,7 @@ const Contact = () => {
     {
       icon: MapPin,
       label: 'Visit Us',
-      value: 'Sr No 48/3, Baba Pathare Patil Complex,',
+      value: 'MORPANKH SAREE',
       sub: 'Chatrapati Shivaji Maharaj Chowk, Kharadi Road, Chandan Nagar, Pune : 411014 India',
     },
     {
