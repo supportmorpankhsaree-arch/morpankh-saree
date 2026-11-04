@@ -79,9 +79,15 @@ const Footer = () => {
             </div>
             <h4 className="font-display text-lg font-semibold mb-3">Follow Us</h4>
             <div className="flex gap-3">
-              <span className="p-2 bg-background/10 rounded-full" aria-hidden="true">
+              <a
+                href="https://www.facebook.com/share/19d767Kea8/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="p-2 bg-background/10 rounded-full hover:bg-background/20 transition-colors"
+              >
                 <Facebook className="h-4 w-4" />
-              </span>
+              </a>
               <a 
                 href="https://www.instagram.com/morpankhsaree?dlrf=YmYxZm9rZ2ZtZjI1"
                 target="_blank" 
